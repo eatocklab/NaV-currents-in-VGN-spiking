@@ -4,7 +4,7 @@ global w_ltk_rm z_ltk_rm w_ltk_kv7 z_ltk_kv7 w_ltk_kvA z_ltk_kvA gb_ltk_rm dt Ek
 
 % n=3 represents 'present' time value
 n=3;
-iklcomplex=0; %set to zero is you wish to run the model with Iltk being composed entirely of Kv1 components. Set to 1 if you want it to be a complex combination of channel subtypes.
+iklcomplex=1; %set to zero is you wish to run the model with Iltk being composed entirely of Kv1 components. Set to 1 if you want it to be a complex combination of channel subtypes.
 
 % Calculate w & z infinity and w & z tau (time constant) as funciton of
 % present V

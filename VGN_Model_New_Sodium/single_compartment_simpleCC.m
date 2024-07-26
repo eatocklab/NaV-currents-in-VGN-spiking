@@ -1,18 +1,18 @@
-function [V]=single_compartment_simpleCC(gb_na, gb_htk, gb_ltk, gb_h, gb_l, neuron_type, inj_step_size, plot_me)
+function [dVdt, V]=single_compartment_simpleCC(gb_na, gb_htk, gb_ltk, gb_h, gb_l, neuron_type, inj_step_size, plot_me)
 % tic
 %Set some global variables
 global a_k_rm b_k_rm c_k_rm n_k_rm m_na_rm h_na_rm n_htk_rm p_htk_rm w_ltk_rm z_ltk_rm r_h_rm
 global gb_k_rm gb_na_rm gb_na_r_rm gb_na_p_rm gb_ltk_rm gb_htk_rm gb_h_rm gl
 global Ena El Ek Eh Esyn
-global dt dur I_print V_data 
+global dt dur I_print dVdt_data dVdt V_data
 
 
 
 %% time and time steps
 %Set the timing variables
 %% time and time steps
-dur= 12; % %1000; %2500; %1100;                       % time duration (ms)
-dt= 0.012; %.0143;                        % delta t (ms)
+dur= 10; % %1000; %2500; %1100;                       % time duration (ms)
+dt= 0.02; %.0143;                        % delta t (ms)
 start= .9; %300; %500                      % time at onset of current clamp (ms)
 c_duration= 12; %1500;                % length of current clamp (ms)
 I_print=1;                      % Plot the individual ionic currents
@@ -23,7 +23,7 @@ nt=1;
 start=start/dt;
 stop=c_duration/dt+start;
 
-I=zeros(1,dur/dt);           % Array representing current clamp
+I= zeros(1,dur/dt);           % Array representing current clamp
 I(start:stop)= inj_step_size;
 %% Experimental Conditions (e.g. reversal potential, etc.)
 
@@ -40,13 +40,13 @@ Esyn=3;                         %Synaptic battery (mV)
 
 %% Neuron Type
 if neuron_type==1         % Sustained
-    V(1)=-58.76916;      %SBL              % ~Resting Potential
+    V(1)=-65;      %SBL              % ~Resting Potential
 elseif neuron_type== 2    % Transient
-    V(1)=-69.43264;                  % ~Resting Potential
+    V(1)=-72;                  % ~Resting Potential
 elseif neuron_type==3     %Sus-B cell parameters
-    V(1)=-60.97;                    % ~Resting Potential (going to be variable, depending on composition of conductances
+    V(1)=-65;                    % ~Resting Potential (going to be variable, depending on composition of conductances
 elseif neuron_type==4     %Sus-C cell parameters
-    V(1)=-60.97;                    % ~Resting Potential (going to be variable, depending on composition of conductances)
+    V(1)=-65;                    % ~Resting Potential (going to be variable, depending on composition of conductances)
 end
 
 gb_na_rm = gb_na;                  %gNa bar for transient current (mS/cm^2) %used 13 mS/cm2 in Hight and Kalluri and the larger 20 mS/cm2 in Ventura and Kalluri
@@ -61,21 +61,23 @@ gl=gb_l;                        %gLeak (mS/cm^2)
 %%
 V=single_compart_second_rm_simpleCC(V(1),I,c);
 time_array = (dt:dt:dur);
+dVdt = gradient(V, time_array);
 Outputdata.Vsave = V;
 Outputdata.time = (0:length(V)-1)*dt;
 Outputdata.InjCurrent = I;
+
 % Plotting the responses
 if plot_me
     figure(neuron_type)
     subplot(2,1,1)
-    plot(dt:dt:dur,V);hold on
-    plot(dt:dt:dur,V_data,'bl--');hold off
-    ylabel('voltage (mV)')
-    xlabel('time (ms)')
+    plot(V,dVdt);hold on
+    plot(V_data, dVdt_data,'bl--');hold off
+    ylabel('dVdt')
+    xlabel('mV')
     if neuron_type ==1
         title(['Sustained Neuron response to Current Clamp step at ',num2str(10*I(start)),' pA'])
         subplot(2,1,2)
-        plot(dt:dt:dur,I(1:dur/dt)*10)
+        plot(dt:dt:dur, V)
         title('Current Clamp')
         ylabel('current (pA)')
         xlabel('time(ms)')

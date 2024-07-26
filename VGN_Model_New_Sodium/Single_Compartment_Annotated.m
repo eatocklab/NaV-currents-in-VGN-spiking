@@ -3,10 +3,12 @@
 %%% left in place temporarily while the top level code is cleaned up for
 %%% public sharing. Original code written by Ariel Hight and edited by RK (7/24/2018)
 %%% Code modified for IH conductances by C.M. Ventura (2017-2018)
-%%% Code further modified for persistent and resurgent Na currents by S. Baeza-Loya (2020-2023)
+%%% Code further modified for persistent and resurgent Na currents by S. Baeza-Loya (2020-2024)
 
-clear all
-close all
+%function [CV, spikenum] = Single_Compartment_Annotated(plot_EPSC, gb_na_rm, gb_na_r_rm, gb_na_p_rm)
+
+%clear all
+%close all
 tic
 
 
@@ -20,12 +22,12 @@ global dt dur VV I_print Na_print plot_syn time spike_rate_array spike_count EPS
 
 %Set the timing variables
 %% time and time steps
-dur= 1000;                      % time duration (ms)
+dur= 1500;                      % time duration (ms)
 dt= 0.1; %                      % delta t (ms)
-start= 900; %500                % time at onset of current clamp (ms)
+start= 500; %500                % time at onset of current clamp (ms)
 c_duration= 500; %1500;         % length of current clamp (ms)
 I_print=1;                      % Plot the individual ionic currents, on = 1, off = 0
-Na_print = 0;                   % Plot individual Na current components; on = 1, off = 0
+Na_print = 1;                   % Plot individual Na current components; on = 1, off = 0
 nt=1;                           % time step (current t = nt*dt)
 
 % calculate start and stop #'s
@@ -44,6 +46,17 @@ El=-65;                         %Leak battery (mV)
 Eh=-46;                         %Ionic battery (mV)
 Esyn=3;                         %Synaptic battery (mV)
 
+%% cs = 2 (CC voltage response, for step evoked currents); cs = 3 (EPSC II, for collecting II times); cs = 4(CC II)
+%see lines 214 onwards for controlling the batch processing for
+%step-evoked current-clamp simulations
+
+cs = 3;
+
+if cs==2
+    I= zeros(1,dur/dt); %plot_EPSC;              % Array representing current clamp
+    I(start:stop)= 10;            % single long pulse, current clamp (x10 pA)(2.5, 6, 10, 15)
+end
+     
 
 %% Neuron Type
 neuron_type= 1;              %1 = Sustained;   2 = Transient
@@ -52,38 +65,39 @@ neuron_type= 1;              %1 = Sustained;   2 = Transient
             V(1) = -61.3; %          % ~Resting Potential (going to be variable, depending on composition of conductances)                  
             gb_k_rm=0;             %gK bar (mS/cm^2) 
             
-            gb_na_rm = 20;                  %gNa bar for transient current (mS/cm^2) %used 13 mS/cm2 in Hight and Kalluri and the larger 20 mS/cm2 in Ventura and Kalluri                         
-            gb_na_r_rm = gb_na_rm * .1;  %gNa bar for resurgent current 2 mS/cm2 (10%)(.1), set to 0 for no current 
-            gb_na_p_rm = gb_na_rm * .02;  %gNa bar for persistent current 0.4 (2%) (0.02), set to 0 for no current                    
+            gb_na_rm = 14;                  %gNa bar for transient current (mS/cm^2) %used 13 mS/cm2 in Hight and Kalluri and the larger 20 mS/cm2 in Ventura and Kalluri                         
+            gb_na_r_rm = 0; %gb_na_rm * .1;  %gNa bar for resurgent current 2 mS/cm2 (10%)(.1), set to 0 for no current 
             
-            gb_htk_rm = 2.8;                %gK bar (high threshold K) (mS/cm^2)        
-            gb_ltk_rm = 0;                 %gK bar (low thfreshold K) (mS/cm^2)        
-            gb_h_rm = 0.13;                 %gh bar (hyper-pol act. cation) (mS/cm^2)   
-            gl = 0.03;                      %gLeak (mS/cm^2)
+            gb_na_p_rm = gb_na_rm * 0.05;  %gNa bar for persistent current 0.4 (3%) (0.03), set to 0 for no current                    
+            
+            gb_htk_rm = 4.5;                %gK bar (high threshold K) (mS/cm^2)        
+            gb_ltk_rm = 0.0;                 %gK bar (low thfreshold K) (mS/cm^2)        
+            gb_h_rm = 0.2;                 %gh bar (hyper-pol act. cation) (mS/cm^2)   
+            gl = 0.02;                      %gLeak (mS/cm^2)
         elseif neuron_type== 2    % Transient
             V(1)= -65.7;                % ~Resting Potential 
             gb_k_rm=0;                      %gK bar (mS/cm^2)                           
             
-            gb_na_rm= 14.6;                   %gNa bar (mS/cm^2), for transient current                         
-            gb_na_r_rm= 0; %gb_na_rm * .1;    %gNa bar for resurgent current, set to 0 for no current 
-            gb_na_p_rm= 0; %gb_na_rm * .02;   %ga bar for persistent current, set to 0 for no current                    
-            
-            gb_htk_rm= 2.8;                  %gK bar (high threshold K) (mS/cm^2)       
-            gb_ltk_rm= 1.1;                  %gK bar (low threshold K) (mS/cm^2)        
-            gb_h_rm = 0.13;
-            gl=0.03;                         %gLeak (mS/cm^2)
-        elseif neuron_type==3     %Sus-B or Sus-C parameters        
-            V(1)=-64.1;      %Sus-C              % ~Resting Potential 
- %           V(1)=-63.5;        %Sus-B 
-            gb_na_rm= 13;                  %gNa bar (mS/cm^2) sus-B = 16, sus-C = 13
+            gb_na_rm = 18.1;                   %gNa bar (mS/cm^2), for transient current                         
             gb_na_r_rm = 0; %gb_na_rm * .1;    %gNa bar for resurgent current, set to 0 for no current 
-            gb_na_p_rm = 0; %gb_na_rm * .02;   %gNa bar for persistent current, set to 0 for none 
+            gb_na_p_rm = 0; %gb_na_rm * 0.03;   %ga bar for persistent current, set to 0 for no current                    
             
-            gb_k_rm= 0;                      %gK bar (mS/cm^2)                           
-            gb_htk_rm= 2.8;                  %gK bar (high threshold K) (mS/cm^2)        
-            gb_ltk_rm= .55;                %gK bar (low threshold K) (mS/cm^2), sus-B = 0.4, sus-C = 0.55
-            gb_h_rm = 0.13;                 %gh bar (hyper-pol act. cation) (mS/cm^2)  
-            gl=0.03;                        %gLeak (mS/cm^2)
+            gb_htk_rm = 2.8;                  %gK bar (high threshold K) (mS/cm^2)       
+            gb_ltk_rm = 1.2;                  %gK bar (low threshold K) (mS/cm^2)        
+            gb_h_rm = 0.9;
+            gl= 0.1;                         %gLeak (mS/cm^2)
+        elseif neuron_type==3     %Sus-B or Sus-C parameters        
+%            V(1)=-65;          %Sus-C                           % ~Resting Potential 
+            V(1)=-63.5;           %Sus-B 
+            gb_na_rm= 11;        % B = 13, C = 11                 %gNa bar (mS/cm^2) sus-B = 12, sus-C = 11
+            gb_na_r_rm = 0; %gb_na_rm * .1;                       %gNa bar for resurgent current, set to 0 for no current 
+            gb_na_p_rm = 0; %gb_na_rm * .03;                      %gNa bar for persistent current, set to 0 for none 
+            
+            gb_k_rm= 0;                                           %gK bar (mS/cm^2)                           
+            gb_htk_rm= 4;                                         %gK bar (high threshold K) (mS/cm^2)        
+            gb_ltk_rm= 0.5;      % B = 0.2 or 0.35, C = 0.5             %gK bar (low threshold K) (mS/cm^2), sus-B = 0.4 (0.5), sus-C = 0.55 (0.7)
+            gb_h_rm =  0.1;       % B = 0.5, C = 0.1              %gh bar (hyper-pol act. cation) (mS/cm^2)  
+            gl=0.05;                                              %gLeak (mS/cm^2)
         end        
         
 %% EPSC_shape
@@ -100,15 +114,7 @@ epsc_amp_94=0;
 trial = neuron_type; % appears to be redundant with neuron_type, edited by RK on 3/18/2013
 Outputdata = struct;
 
-cs = 2;
-%% cs = 2 (CC voltage response, for step evoked currents); cs = 3 (EPSC II, for collecting II times); cs = 4(CC II)
-%see lines 214 onwards for controlling the batch processing for
-%step-evoked current-clamp simulations
-if cs==2
-    I= zeros(1,dur/dt); %plot_EPSC;            % Array representing current clamp
-    I(start:stop)= 5;            % single long pulse, current clamp (x10 pA)(2.5, 6, 8, 15)
-end
-     %% EPSC_RESPONSE %%%
+%% EPSC_RESPONSE %%%
      if cs==3    %Calculating EPSC response
             % Batch for Intervent Interval Calculations
            b_switch=0;     % Batch on (change excitation variable) = 1; Batch on (change magnitude variable) = 2; Batch on (EPSC duration) = 3; Batch on (Dynamic Range Finder) = 4; Batch off = 0
@@ -165,8 +171,8 @@ end
                 end
                 
            elseif b_switch==0
-                excitation= 3;          % mean EPSC intervent interval (ms)
-                mag_mult= .05; %0.01  0.05 	0.1	   0.3   0.5  0.7   1     1.2     
+                excitation= 5;          % mean EPSC intervent interval (ms)
+                mag_mult= .3; %0.01  0.05 	0.1	   0.3   0.5  0.7   1     1.2     
 %                 spike_dur=0.4;         % this does not refer to the length of the EPSC spike, but rather represents the alpha value (e.g. alpha = 1.4 corresponds to spike duration of ~ 17.5 ms)
                 II_is=EPSC_excitation_response(V(1),c,excitation,mag_mult)*dt;       %Iterspike Interval (ms)
                 Outputdata.Vsave = VV;
@@ -239,7 +245,7 @@ end
             
             % Batch for Current Clamp
             if b_switch==1 || b_switch==3
-               cc_mag_array=[.5];      %[-10,-5,-2,-1,0,1,2,5,7,10];                     % CC magnitude array 1
+               cc_mag_array=[3.5];      %[-10,-5,-2,-1,0,1,2,5,7,10];                     % CC magnitude array 1
                b_length=length(cc_mag_array); %for current clamp series
                gna_steps= ones(1,20)*20;
                gltk_steps= linspace(0.2,0.80,20); %titrating gltk
@@ -488,8 +494,9 @@ end
             end
      end
 
-V = VV;
-%Spikes_count_CV;
+VV = VV';
+V = V';
+Spikes_count_CV;
 %    end    
 %  end
 toc

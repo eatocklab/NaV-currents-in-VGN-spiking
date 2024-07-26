@@ -90,7 +90,7 @@ V(2)=V(3);
 VV=(V);
 
 % Generating the stimulus array
-EPSC_train = plot_EPSC*10/mag_mult;  %generate_EPSC_train(EPSC_length,excitation); %plot_EPSC*10/mag_mult;  %
+EPSC_train = plot_EPSC*10/mag_mult;  %generate_EPSC_train(EPSC_length,excitation); %
 plot_EPSC = EPSC_train/10*mag_mult;  %EPSC_train/10*mag_mult; %EPSC converted to pA (/10), converted to scale factor (*mag_mult)
 plot_syn=EPSC_train/10*mag_mult/97;  %EPSC converted to pA (/10), converted to scale factor (*mag_mult), and converted to conductance (/97 mV holding potential of recording)
 
@@ -134,11 +134,11 @@ xlabel('time (ms)')
 ylabel('mV')
 ylim([-100 100])
 subplot(2,1,2)
-plot(dt:dt:dur,plot_syn(1:dur/dt)); hold on
+plot(dt:dt:dur,plot_EPSC(1:dur/dt)); hold on
 title('Synaptic Excitation')
 xlabel('time (ms)')
-ylabel('mV')
-ylim([0 1.5])
+ylabel('pA')
+ylim([0 100])
 
 II_array=II(2:length(II));
 

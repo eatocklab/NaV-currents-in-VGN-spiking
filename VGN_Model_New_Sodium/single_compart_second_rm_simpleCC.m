@@ -22,10 +22,10 @@ V(1:2)= v;
 
 [mi_t_rm variable] = inf_tau_mt_rm(V(1));
 [hi_t_rm variable] = inf_tau_ht_rm(V(1));
-[mi_p_rm] = V(1);
-[hi_p_rm variable] = inf_tau_hp_rm(V(1));
+[mi_p_rm] = inf_mp_rm(V(1));
+[hi_p_rm] = 0;
 [bi_r_rm] = 1; %; %initialize from 1, because no channels are blocked yet
-[hi_r_rm variable] = inf_tau_hr_rm(V(1));
+[hi_r_rm variable] = inf_tau_hr_rm(V(1)); 
 
 [ai_rm variable]=inf_tau_a_rm(V(1));
 [bi_rm variable]=inf_tau_b_rm(V(1));

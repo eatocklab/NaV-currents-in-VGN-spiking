@@ -1,6 +1,6 @@
 function [Spikes] = spike_CV(V,Time,threshold)
    
-    [pks,locs]=findpeaks(V(1:10000),'minpeakheight',threshold);
+    [pks,locs]=findpeaks(V(1:15000),'minpeakheight', threshold);
     Spikes.spikeheight=pks;
     Spikes.mean_spikeheight = mean(Spikes.spikeheight);
 %     Spikes.sem_spikeheight = std(Spikes.spikeheight)/sqrt(length(Spikes.spikeheight));

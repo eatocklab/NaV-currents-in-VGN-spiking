@@ -7,7 +7,7 @@
 exp = 1; % 1 = no batch, 2 = batch 
 
 if exp == 1
-    spikes(1) = spike_CV(V, time_array, -20);
+    spikes(1) = spike_CV(VV, time_array, -20);
 else
     for n=1:5
     spikes(n) = spike_CV(V(n,:),time_array, -20);
